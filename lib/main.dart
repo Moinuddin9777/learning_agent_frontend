@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:learning_agent/views/response_screen.dart';
 
 void main() {
   runApp(const LearningPathApp());
@@ -292,28 +293,28 @@ class _LearningPathFormState extends State<LearningPathForm> {
   }
 }
 
-class ResponseScreen extends StatelessWidget {
-  final String response;
+// class ResponseScreen extends StatelessWidget {
+//   final String response;
 
-  const ResponseScreen({required this.response, super.key});
+//   const ResponseScreen({required this.response, super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Learning Path'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: MarkdownBody(
-            data: response,
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Your Learning Path'),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: SingleChildScrollView(
+//           child: MarkdownBody(
+//             data: response,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 InputDecoration textFieldDecoration(BuildContext context, String hintText) =>
     InputDecoration(
