@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:learning_agent/theme.dart';
 import 'package:learning_agent/views/response_screen.dart';
+import 'package:learning_agent/widgets/api_key_validator.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
 
 void main() {
   runApp(const LearningPathApp());
@@ -14,15 +25,219 @@ class LearningPathApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Adaptive Learning Path Generator',
+      title: 'Learning Path Generator',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          brightness: Brightness.dark,
-          seedColor: const Color.fromARGB(255, 171, 222, 244),
+          seedColor: const Color(0xFF6750A4),
+          secondary: const Color(0xFF03DAC6),
+          tertiary: const Color(0xFFEFB8C8),
         ),
         useMaterial3: true,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
       ),
-      home: const MainScreen(title: 'Learning Path Generator'),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Lottie Animation
+                      Expanded(
+                        flex: 2,
+                        child: Lottie.network(
+                          'https://lottie.host/6b230bbe-67a1-46e2-92d6-a1ff142ffc46/zf8l9mUsZ0.json', // Education/Learning animation
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      // Title and Description
+                      Text(
+                        'AI Learning Path Generator',
+                        style: GoogleFonts.poppins(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Create personalized learning paths tailored to your goals and preferences',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 48),
+                      // Get Started Button
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MainScreen(
+                                title: 'Generate Learning Path',
+                              ),
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text(
+                            'Get Started',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Feature Cards
+              Container(
+                height: 180,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _FeatureCard(
+                      icon: Icons.person_outline,
+                      title: 'Personalized',
+                      description: 'Tailored to your learning style',
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    _FeatureCard(
+                      icon: Icons.timeline,
+                      title: 'Structured',
+                      description: 'Clear milestones and progress tracking',
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    _FeatureCard(
+                      icon: Icons.download,
+                      title: 'Exportable',
+                      description: 'Save and share your learning path',
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      child: Card(
+        elevation: 4,
+        shadowColor: color.withOpacity(0.4),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -55,47 +270,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-class ApiKeyWidget extends StatelessWidget {
-  ApiKeyWidget({required this.onSubmitted, super.key});
-
-  final ValueChanged<String> onSubmitted;
-  final TextEditingController _textController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'To generate learning paths, you\'ll need a Gemini API key.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: textFieldDecoration(context, 'Enter your API key'),
-                    controller: _textController,
-                    onSubmitted: onSubmitted,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => onSubmitted(_textController.text),
-                  child: const Text('Submit'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class LearningPathForm extends StatefulWidget {
   const LearningPathForm({required this.apiKey, super.key});
@@ -295,9 +469,7 @@ class _LearningPathFormState extends State<LearningPathForm> {
 
 // class ResponseScreen extends StatelessWidget {
 //   final String response;
-
 //   const ResponseScreen({required this.response, super.key});
-
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
@@ -316,24 +488,24 @@ class _LearningPathFormState extends State<LearningPathForm> {
 //   }
 // }
 
-InputDecoration textFieldDecoration(BuildContext context, String hintText) =>
-    InputDecoration(
-      contentPadding: const EdgeInsets.all(15),
-      hintText: hintText,
-      border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(14),
-        ),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.secondary,
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(14),
-        ),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.secondary,
-        ),
-      ),
-    );
+// InputDecoration textFieldDecoration(BuildContext context, String hintText) =>
+//     InputDecoration(
+    //   contentPadding: const EdgeInsets.all(15),
+    //   hintText: hintText,
+    //   border: OutlineInputBorder(
+    //     borderRadius: const BorderRadius.all(
+    //       Radius.circular(14),
+    //     ),
+    //     borderSide: BorderSide(
+    //       color: Theme.of(context).colorScheme.secondary,
+    //     ),
+    //   ),
+    //   focusedBorder: OutlineInputBorder(
+    //     borderRadius: const BorderRadius.all(
+    //       Radius.circular(14),
+    //     ),
+    //     borderSide: BorderSide(
+    //       color: Theme.of(context).colorScheme.secondary,
+    //     ),
+    //   ),
+    // );
